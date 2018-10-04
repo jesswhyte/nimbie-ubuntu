@@ -1,9 +1,7 @@
 #!/bin/bash -xe
-# jess whyte, @jesswhyte Aug 2018
+# jess whyte, @jesswhyte Aug 2018 
 
-## adaptation of nimbie.sh now with more logging 
-
-# usage example : bash nimbie-utl.sh /path/to/where/you/want/to/store/isofiles | tee -a yourlogfile.log
+# usage example : bash nimbie.sh /path/to/where/you/want/to/store/isofiles | tee -a yourlogfile.log
 
 # you have to request and download linux SDK from Acronova
 # make /64/autoloader executable
@@ -11,8 +9,9 @@
 ## jess notes: continue points = not iso, blank blocksize or blank blockcount or dd status != 0
 ## jess notes: autoloader status on LOAD, +s14 = no disk there [DONE WITH PILE], +s07 = OK, + s10 = drive closed, + s12 = disk already in 
 
+# gsettings set org.gnome.desktop.media-handling automount-open false ##if you don't want nautilus to launch a window every time it mounts a disk
 
-autoloader="sudo /usr/local/bin/Linux2017Q1_General/64/autoloader" # path to executable on local machine 
+autoloader="sudo /usr/local/bin/Linux2017Q1_General/64/autoloader" # path to executable on local machine - not needed if added to path, etc.
 
 cdcheck(){
 	# this function adapted from cd.close - by https://superuser.com/users/464868/allan 
@@ -62,16 +61,18 @@ reject(){
 
 $autoloader INIT ## initialize the nimbie
 
-s_status="+S07" ## set starting s-status
+s_status="+S07" ## set starting s_status
  
 while [ "s_status" != "+S14" ]; do
+
 	eject /dev/sr1 ## eject the drive tray
 
 	output=`$autoloader LOAD` ## load a disk
-	s_status=`echo $output | grep -oP "\+S\d\d"` # get the S-code from the autoloader response, autoloader S14 = no more disks
+	
+	s_status=`echo $output | grep -oP "\+S\d\d"` # get the S-code from the $autoloader response, $autoloader S14 = no more disks
 	
 	if [[ $s_status == "+S14" ]]; then
-	  echo "Done!"
+	  echo "Done all the disks!"
 	  exit 0
 	fi
 	
@@ -128,13 +129,27 @@ while [ "s_status" != "+S14" ]; do
 		continue
 	fi
 
+	sleep 5 
+	
 	eject /dev/sr1 ## eject the drive tray
 	
-	$autoloader PICK ## pick up the disk
-
+	outputpick=`$autoloader PICK` ## pick up the disk
+	s_statuspick=`echo $outputpick | grep -oP "\+S\d\d"` # get the S-code from the $autoloader response, $autoloader S10 = drive closed, can't pick, sometimes there is an issue here
+	
+	if [[ $s_statuspick == "+S10" ]]; then
+	  echo "Drive is still closed, not ejecting...EXITING"
+	  exit 0	 
+	fi
+		
+	
+	sleep 5
+eject
 	eject -t /dev/sr1 ##close the drive tray
+	
         sleep 5
+        
 	$autoloader UNLOAD 	##unload the disk
+	
         sleep 5
 done
 
