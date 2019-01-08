@@ -1,4 +1,7 @@
 #!/bin/bash -xe
+
+# NOTE: THIS IS A LOCALIZED VERSION - CONTAINS REFERENCE TO AUTOLOADER THAT DOES NOT MATCH DEFAULT INSTALL
+
 # jess whyte, @jesswhyte Aug 2018 
 
 # usage example : bash nimbie.sh /path/to/where/you/want/to/store/isofiles | tee -a yourlogfile.log
@@ -9,9 +12,9 @@
 ## jess notes: continue points = not iso, blank blocksize or blank blockcount or dd status != 0
 ## jess notes: autoloader status on LOAD, +s14 = no disk there [DONE WITH PILE], +s07 = OK, + s10 = drive closed, + s12 = disk already in 
 
-# gsettings set org.gnome.desktop.media-handling automount-open false ##if you don't want nautilus to launch a window every time it mounts a disk
+gsettings set org.gnome.desktop.media-handling automount-open false ##if you don't want nautilus to launch a window every time it mounts a disk
 
-autoloader="sudo /usr/local/bin/Linux2017Q1_General/64/autoloader" # path to executable on local machine - not needed if added to path, etc.
+autoloader="sudo /usr/local/bin/autoloader" # path to executable on local machine - not needed if added to path, etc.
 
 cdcheck(){
 	# this function adapted from cd.close - by https://superuser.com/users/464868/allan 
@@ -143,7 +146,7 @@ while [ "s_status" != "+S14" ]; do
 		
 	
 	sleep 5
-eject
+
 	eject -t /dev/sr1 ##close the drive tray
 	
         sleep 5

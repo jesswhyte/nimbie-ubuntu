@@ -2,10 +2,10 @@
 
 function show_help() {
 	echo
-	echo -e "USAGE: ./checknimbie.sh -d /CAPTURED-DIR/ -l LIBRARY -c CALLNUM \n"
-	echo -e "-l : The library the collection is from."
-	echo -e "-d : The directory you want to write to, e.g. /home/bcdadmin/CAPTURED/"
-	echo -s "-s : The source directory for iso files"
+	echo -e "USAGE: checknimbie.sh -d /CAPTURED-DIR/ -l LIBRARY -c CALLNUM \n"
+	echo -l ": The library the collection is from."
+	echo -d ": The directory you want to write to, e.g. /home/bcdadmin/CAPTURED/"
+	echo -s ": The source directory for iso files"
 	#echo -e "-c : The call number of the item"
  	echo -e "Example:\n./checknimbie.sh -l ECSL -d /home/bcadmin/CAPTURED -c qa76.73.j38.r54.2002x"  
 }
@@ -35,7 +35,6 @@ function array_contains() {
 }
 
 function scandisk {
-	### SCAN ####
 	tiff="$dir$lib/$calldum/$calldum-original.tiff"
 	cropped="$dir$lib/$calldum/$calldum.tiff"
 	if [ -e $cropped ]; then
@@ -45,10 +44,8 @@ function scandisk {
 	read -p "Do you want to scan this disk? [y/n] " response
 	if [[ "$response" =~ ^([Yy])+$ ]]; then
 		echo "about to scan: $tiff"
-		scanner="epson2:libusb:001:002"
 		eject
 		read -p "Please put disk on scanner and hit any key when ready"
-		read -p "Ready?" 
 		scanimage -d "$scanner" --format=tiff --mode col --resolution 300 -x 150 -y 150 >> $tiff
 		echo "disk tiff scan complete"
 		convert $tiff -crop `convert $tiff -virtual-pixel edge -blur 0x15 -fuzz 15% -trim -format '%[fx:w]x%[fx:h]+%[fx:page.x]+%[fx:page.y]' info:` +repage $cropped
@@ -79,11 +76,10 @@ while getopts "h?d:l:s:" opt; do
     case "$opt" in
     h|\?)
         show_help
+	exit
         ;;
     d)  dir=$OPTARG
         ;;
-   # c)  callnum=$OPTARG
-    #    ;;
     l)  lib=$OPTARG
         ;;
     s)  source=$OPTARG
@@ -102,8 +98,6 @@ if [ -z "$lib" ]; then
   echo "Library (-l) is required!"
 elif [ -z "$dir" ]; then
   echo "directory (-d) is required!"
-#elif [ -z "$callnum" ]; then
-#  echo "callnumber (-c) is required!"
 elif [ -z "$source" ]; then
   echo "source (-s) is required!"
 elif [ "$garbage" ]; then
@@ -118,20 +112,28 @@ if [ $lv -eq 0 ]; then
   echo -e "Valid libraries:\n${LIBS[*]}"
 fi
 
-### 
+
+### Get correct scanner location ###
+scanner="epson2:libusb:"
+bus=$(lsusb | grep Epson | cut -d " " -f 2)
+device=$(lsusb | grep Epson | cut -d " " -f 4 | cut -d ":" -f 1)
+echo "found Epson scanner at Bus: $bus Device: $device"
+scanner="epson2:libusb:$bus:$device"
 
 
 ### GET VOLUME NAMES OF NIMBIE ISO FILES ###
-rm volumeIDs-temp.txt
+if [ -f volumeIDs-temp.txt ] ; then 
+	rm volumeIDs-temp.txt
+fi
 
+exec 2>/dev/null
 for iso in $(find $source -name "*.iso" -o -name "*.ISO" -type f); do
-	#echo "checking: "$iso
-	#isoinfo -d -i $iso
-	isoID=$(isoinfo -d -i $iso | grep "^Volume id:" | cut -d " " -f 3)
+	#echo "checking: "$iso in $source
+	isoID=$(isoinfo -d -i $iso | grep "^Volume id:" | cut -d " " -f 3) 
 	isoBC=$(isoinfo -d -i $iso | grep "^Volume size is:" | cut -d " " -f 4)
 	echo $iso,$isoID,$isoBC >> volumeIDs-temp.txt
 done	
-	
+exec 2>/dev/tty
 
 while read -s -p "Do you wish to check a disk y/n? " ANSWER && [ "$ANSWER" = "y" ] ; do
 
@@ -148,8 +150,8 @@ while read -s -p "Do you wish to check a disk y/n? " ANSWER && [ "$ANSWER" = "y"
 	### Insert Disk ###	
 	#eject
 
-	read -p "Please insert disk into drive"
-	read -p "Please hit Enter once disc is LOADED"
+	read -p "Please insert disk into drive and hit Enter"
+	read -p "Please hit Enter again, once disc is LOADED"
 	
 	# get CD INFO
 	cdinfo=$(isoinfo -d -i /dev/cdrom)
