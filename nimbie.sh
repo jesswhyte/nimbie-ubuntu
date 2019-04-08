@@ -1,4 +1,4 @@
-#!/bin/bash -xe
+#!/bin/bash
 
 # NOTE: THIS IS A LOCALIZED VERSION - CONTAINS REFERENCE TO AUTOLOADER THAT DOES NOT MATCH DEFAULT INSTALL
 
@@ -87,7 +87,12 @@ while [ "s_status" != "+S14" ]; do
 	
 	## Set Volume name as variable
 	volume=`isoinfo -d -i /dev/sr1  | grep "^Volume id:" | cut -d ":" -f 2` # gets volume name
-	volume=`echo $volume | tr -d [:punct:] | sed 's/\s/\_/g'` # strips out punct and converts spaces to _
+	volume=`echo $volume | tr -d [:punct:] | sed 's/\s/\_/g'` # strips out punct and converts spaces to _	
+	#if volume name is null...
+        if [[ -z "$volume" ]]; then
+          volume="null-volume"
+        fi
+
 	time=`date +%Y%m%d_%H%M%S` # make a time stamp
 	
 	path=`realpath $1` # assumes you gave a path as an argument
@@ -124,7 +129,7 @@ while [ "s_status" != "+S14" ]; do
 
 	## Run dd on disc
 	
-	dd if=/dev/sr1 of=$path/$time-$volume.iso bs=$blocksize count=$blockcount status=progress | tee -a $path/$time-$volume.log # runs dd using found bs and bc, appends output to log
+	dd if=/dev/sr1 of=$path/$time-$volume.iso bs=$blocksize count=$blockcount status=progress #| tee -a $path/$time-$volume.log # runs dd using found bs and bc, appends output to log (currently commented out log)
 	status=$? 
 
 	if [ $status != 0 ]; then #not yet tested

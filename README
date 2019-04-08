@@ -1,2 +1,9 @@
 
-work in progress - futzing around with nimbie. trust nothing. 
+work in progress - futzing around with nimbie
+
+*nimbie.sh* 
+
+usage example : bash nimbie.sh /path/to/where/you/want/to/store/isofiles 
+
+Script to use nimbie autoloader in ubuntu, requires linux SDK from Acronova
+make sure autoloader is executable and check install location/setup
