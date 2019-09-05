@@ -12,7 +12,8 @@
 ## jess notes: continue points = not iso, blank blocksize or blank blockcount or dd status != 0
 ## jess notes: autoloader status on LOAD, +s14 = no disk there [DONE WITH PILE], +s07 = OK, + s10 = drive closed, + s12 = disk already in 
 
-gsettings set org.gnome.desktop.media-handling automount-open false ##if you don't want nautilus to launch a window every time it mounts a disk
+gsettings set org.gnome.desktop.media-handling automount-open false 
+##if you don't want nautilus to launch a window every time it mounts a disk
 
 autoloader="sudo /usr/local/bin/autoloader" # path to executable on local machine - not needed if added to path, etc.
 
@@ -90,19 +91,19 @@ while [ "s_status" != "+S14" ]; do
 	volume=`echo $volume | tr -d [:punct:] | sed 's/\s/\_/g'` # strips out punct and converts spaces to _	
 	#if volume name is null...
         if [[ -z "$volume" ]]; then
-          volume="null-volume"
+          volume="null-volume-$time"
         fi
 
 	time=`date +%Y%m%d_%H%M%S` # make a time stamp
 	
 	path=`realpath $1` # assumes you gave a path as an argument
-	echo $path/$time-$volume.iso # assemble file name for destination .iso, echo for error checking
+	echo $path/$volume.iso # assemble file name for destination .iso, echo for error checking
 	
-	echo $time >> $path/$time-$volume.log
+	echo $time >> $path/$volume.log
 	
 		# Display cd Info
 	echo "---------------------CD INFO-----------------------"  
-	isoinfo -d -i /dev/sr1 | tee -a $path/$time-$volume.log						
+	isoinfo -d -i /dev/sr1 | tee -a $path/$volume.log						
 	echo "----------------------------------------------------"
 	
 	## Get Block size of CD  ##  NOTE: IF the CD is NOT AN ISO, IT IS REJECTED! 
@@ -129,7 +130,7 @@ while [ "s_status" != "+S14" ]; do
 
 	## Run dd on disc
 	
-	dd if=/dev/sr1 of=$path/$time-$volume.iso bs=$blocksize count=$blockcount status=progress #| tee -a $path/$time-$volume.log # runs dd using found bs and bc, appends output to log (currently commented out log)
+	dd if=/dev/sr1 of=$path/$volume.iso bs=$blocksize count=$blockcount status=progress 
 	status=$? 
 
 	if [ $status != 0 ]; then #not yet tested
