@@ -4,7 +4,7 @@
 
 # jess whyte, @jesswhyte Aug 2018 
 
-# usage example : bash nimbie.sh /path/to/where/you/want/to/store/isofiles | tee -a yourlogfile.log
+# usage example : bash nimbie.sh /media/storage/Nimbie_ISOs/
 
 # you have to request and download linux SDK from Acronova
 # make /64/autoloader executable
@@ -99,11 +99,9 @@ while [ "s_status" != "+S14" ]; do
 	path=`realpath $1` # assumes you gave a path as an argument
 	echo $path/$volume.iso # assemble file name for destination .iso, echo for error checking
 	
-	echo $time >> $path/$volume.log
-	
-		# Display cd Info
+			# Display cd Info
 	echo "---------------------CD INFO-----------------------"  
-	isoinfo -d -i /dev/sr1 | tee -a $path/$volume.log						
+	isoinfo -d -i /dev/sr1 						
 	echo "----------------------------------------------------"
 	
 	## Get Block size of CD  ##  NOTE: IF the CD is NOT AN ISO, IT IS REJECTED! 
