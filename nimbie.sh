@@ -28,11 +28,11 @@ cdcheck(){
 	STOP=${TOKENS[-1]}
 
 	for i in $TRIES; do
-	echo close: ATTEMPT $i of $STOP
+	#echo close: ATTEMPT $i of $STOP
 	
 	output=`file -s $CDROM`
 	
-	echo OUTPUT $output
+	#echo OUTPUT $output
 	
 	if [[ "$output" != "/dev/sr1: writable, no read permission" ]]; then #to do: think about ways to do this better, e.g. another method w/ clearer status exits
 		MOUNT=1
@@ -43,13 +43,13 @@ cdcheck(){
 		break
 	fi
 	
-	echo sleep: $INTERVAL SECONDS...
+	#echo sleep: $INTERVAL SECONDS...
 	sleep $INTERVAL
 	done
 
 	if [ $MOUNT -eq 1 ]; then
-		echo final: $CDROM
-		printf "final: LABEL "
+		#echo final: $CDROM
+		#printf "final: LABEL "
 		volname $CDROM
 	else
 		echo final: NO MEDIUM DETECTED
@@ -108,7 +108,7 @@ while [ "s_status" != "+S14" ]; do
 	
 	blocksize=`isoinfo -d -i /dev/sr1 | grep "^Logical block size is:" | cut -d ":" -f 2 | tr -d '[:space:]'` # gets blocksize from isoinfo output, if I do as variable, the string is too tricky
 	if test "$blocksize" = ""; then
-			echo catdevice FATAL ERROR: Blank blocksize >&2 
+			echo catdevice FATAL ERROR: Blank blocksize. Rejecting disk. >&2 
 			reject
 			continue
 	fi
@@ -116,7 +116,7 @@ while [ "s_status" != "+S14" ]; do
 	## Get Block count of CD
 	blockcount=`isoinfo -d -i /dev/sr1  | grep "^Volume size is:" | cut -d ":" -f 2 | tr -d '[:space:]'` # gets blockcount from isoinfo output
 	if test "$blockcount" = ""; then
-			echo catdevice FATAL ERROR: Blank blockcount >&2 
+			echo catdevice FATAL ERROR: Blank blockcount. Rejecting disk.  >&2 
 			reject
 			continue
 	fi
@@ -135,7 +135,9 @@ while [ "s_status" != "+S14" ]; do
 		reject
 		continue
 	fi
-
+	
+	chgrp floppy $path/$volume.iso #change the owner group of iso to floppy
+	
 	sleep 5 
 	
 	eject /dev/sr1 ## eject the drive tray
