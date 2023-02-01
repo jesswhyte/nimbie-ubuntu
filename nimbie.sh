@@ -5,15 +5,32 @@
 # jess whyte, @jesswhyte Aug 2018 
 
 # usage example : bash nimbie.sh /media/storage/Nimbie_ISOs/
-
 # you have to request and download linux SDK from Acronova
 # make /64/autoloader executable
 
 ## jess notes: continue points = not iso, blank blocksize or blank blockcount or dd status != 0
 ## jess notes: autoloader status on LOAD, +s14 = no disk there [DONE WITH PILE], +s07 = OK, + s10 = drive closed, + s12 = disk already in 
 
-gsettings set org.gnome.desktop.media-handling automount-open false 
+function show_help() {
+	echo
+	echo -e "USAGE: bash nimbie.sh <output directory>"
+	echo -e "-This script relies on the Acronova autoloader SDK, which should be installed at /usr/local/bin/autoloader"
+	echo -e "-Autoloader requires sudo access to run"
+	echo -e "-ISOs will be stored in the <output directory>"
+ 	echo -e 'Example:\nbash nimbie.sh /mnt/data/Nimbie_ISOs/'  
+}
+
+# Parse arguments
+while getopts "h?" opt; do
+    case "$opt" in
+    h|\?)
+        show_help
+	exit
+    esac
+done
+
 ##if you don't want nautilus to launch a window every time it mounts a disk
+gsettings set org.gnome.desktop.media-handling automount-open false 
 
 autoloader="sudo /usr/local/bin/autoloader" # path to executable on local machine - not needed if added to path, etc.
 
