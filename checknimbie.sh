@@ -8,6 +8,7 @@ function show_help() {
 	echo -s ": The source directory for iso files"
 	#echo -e "-c : The call number of the item"
  	echo -e "Example:\n./checknimbie.sh -l ECSL -d /home/bcadmin/CAPTURED -c qa76.73.j38.r54.2002x"  
+	echo
 }
 
 
@@ -45,8 +46,8 @@ function scandisk {
 	if [[ "$response" =~ ^([Yy])+$ ]]; then
 		echo "about to scan: $tiff"
 		eject
-		read -p "Please put disk on scanner and hit any key when ready"
-		scanimage -d "$scanner" --format=tiff --mode col --resolution 300 -x 150 -y 150 >> $tiff
+		read -p "Please put disk on scanner, bottom left corner, text facing away from you, and hit any key when ready"
+		scanimage --mode=Color --format=tiff --resolution 300 -x 150 -y 150 >> $tiff
 		echo "disk tiff scan complete"
 		convert $tiff -crop `convert $tiff -virtual-pixel edge -blur 0x15 -fuzz 15% -trim -format '%[fx:w]x%[fx:h]+%[fx:page.x]+%[fx:page.y]' info:` +repage $cropped
 		echo "image cropped"
@@ -117,7 +118,10 @@ fi
 scanner="epson2:libusb:"
 bus=$(lsusb | grep Epson | cut -d " " -f 2)
 device=$(lsusb | grep Epson | cut -d " " -f 4 | cut -d ":" -f 1)
-echo "found Epson scanner at Bus: $bus Device: $device"
+scanimage -L
+echo "Epson scanner at Bus: $bus Device: $device"
+echo "If scanner not found (no bus/device), then scanner is not available."
+echo
 scanner="epson2:libusb:$bus:$device"
 
 
@@ -140,18 +144,20 @@ while read -s -p "Do you wish to check a disk y/n? " ANSWER && [ "$ANSWER" = "y"
 	##capture disk
 
 	### Work out callnum ###
-	echo ""
-	echo -n "Enter call number: "
+	echo 
+	echo -n "Enter call number or ID (this will become the ISO filename, . will be replaced with -, no spaces): "
 	read callnum
 	calldum1=${callnum^^}
 	calldum=${calldum1//./-}
-	echo "using callNum: $calldum"
-	
+	echo "using callNum: ${calldum}"
+	echo 
+
 	### Insert Disk ###	
 	#eject
 
-	read -p "Please insert disk into drive and hit Enter"
-	read -p "Please hit Enter again, once disc is LOADED"
+	read -p "Please insert disk into optical drive and hit Enter"
+	read -p "Please hit Enter again, once disc is fully loaded"
+	echo
 	
 	# get CD INFO
 	cdinfo=$(isoinfo -d -i /dev/cdrom)
@@ -182,7 +188,7 @@ while read -s -p "Do you wish to check a disk y/n? " ANSWER && [ "$ANSWER" = "y"
 	echo "Checking List of ISO's..."
 	count=$(grep -c $volumeCD volumeIDs-temp.txt)
 	if (( $count == 0 )) ; then
-		echo "no results found..check manually"
+		echo "no matches found in ${source}..check manually..."
 		read -p "Enter ISO location if known (enter n if not known): " response
 		if [[ "$response" != "n" ]]; then
 			"$response" = $iso
